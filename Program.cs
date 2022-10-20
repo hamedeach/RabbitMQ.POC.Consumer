@@ -20,21 +20,32 @@ channel.QueueDeclare(queue: "echoQ",
     autoDelete: false,
     arguments: null);
 
+// set the consumer prefetch count to 1 
+channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+
+var random = new Random();
+
 var consumer = new EventingBasicConsumer(channel);
 consumer.Received += Consumer_Received;
 
+
 void Consumer_Received(object? sender, BasicDeliverEventArgs e)
 {
-    
+    var delaytime = random.Next(2, 5);
     var message = Encoding.UTF8.GetString(e.Body.ToArray());
-    Console.WriteLine($"Consumner Received {message}");
+    Console.WriteLine($"Consumner Received {message}  - the processing time {delaytime}");
+    // simualte that the task take a time
+    Task.Delay(TimeSpan.FromSeconds(delaytime)).Wait();
+
+    //implement the manually ack
+    channel.BasicAck(deliveryTag: e.DeliveryTag, multiple: false);
 }
 
 while (true)
 {
-    Thread.Sleep(1000);
+    Task.Delay(TimeSpan.FromSeconds(1)).Wait();
     channel.BasicConsume(queue: "echoQ",
-    autoAck: true,
+    autoAck: false, // disable the auto ack 
     consumer: consumer);
 
 }
