@@ -14,11 +14,10 @@ var connection = factory.CreateConnection();
 
 using var channel = connection.CreateModel();
 
-channel.QueueDeclare(queue: "echoQ",
-    durable: false,
-    exclusive: false,
-    autoDelete: false,
-    arguments: null);
+// define the exchange 
+channel.ExchangeDeclare(exchange: "myroutingexchange", ExchangeType.Direct);
+
+var queueName = channel.QueueDeclare().QueueName;
 
 var consumer = new EventingBasicConsumer(channel);
 consumer.Received += Consumer_Received;
